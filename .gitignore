@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+dist/
+sources/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tar.gz
+*.zip
+*.log
+
+# Claude and Serena
+.claude/
+.serena/
+CLAUDE.md

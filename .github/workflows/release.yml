@@ -1,0 +1,86 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Homebrew dependencies
+        run: |
+          brew install autoconf automake libtool pkg-config openssl@3
+
+      - name: Build dependencies
+        run: |
+          bash scripts/build-all.sh
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Package binaries
+        run: |
+          bash scripts/package.sh ${{ steps.get_version.outputs.version }}
+
+      - name: Verify package
+        run: |
+          bash scripts/verify.sh dist/qaptly-ios-deps-macos-v${{ steps.get_version.outputs.version }}.tar.gz
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md <<EOF
+          ## iOS Automation Dependencies v${{ steps.get_version.outputs.version }}
+
+          ### 📦 What's Included
+
+          - **libimobiledevice** v1.3.0 (GPL v2+)
+          - **ios-deploy** v1.12.2 (GPLv3)
+
+          ### 🖥️ Platform Support
+
+          - macOS 12.0+
+          - Apple Silicon (arm64)
+
+          ### 📥 Installation
+
+          Download and extract to:
+          \`\`\`
+          ~/Library/Application Support/qaptly/ios-tools/
+          \`\`\`
+
+          Or use the automatic installation in Qaptly app.
+
+          ### ✅ Checksum
+
+          See the \`version.txt\` file inside the package for checksums.
+
+          ### 🔗 Source Code
+
+          Complete source code: [SOURCE.txt](./SOURCE.txt)
+
+          ### 📄 Licenses
+
+          - libimobiledevice: GPL v2+ ([LICENSE-GPL-v2](./LICENSE-GPL-v2))
+          - ios-deploy: GPLv3 ([LICENSE-GPL-v3](./LICENSE-GPL-v3))
+          EOF
+          echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/qaptly-ios-deps-macos-v${{ steps.get_version.outputs.version }}.tar.gz
+          body_path: ${{ steps.release_notes.outputs.notes_file }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

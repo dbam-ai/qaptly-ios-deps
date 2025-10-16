@@ -1,0 +1,25 @@
+iOS Automation Dependencies Package
+
+Copyright Notice:
+═══════════════════════════════════════════════════════════════
+
+This package contains software developed by the libimobiledevice project
+and the ios-deploy project.
+
+libimobiledevice:
+  Copyright (C) 2008-2023 libimobiledevice Project
+  Licensed under GPL v2 or later
+  https://libimobiledevice.org
+
+ios-deploy:
+  Copyright (C) 2007-2023 ios-deploy contributors
+  Licensed under GPLv3
+  https://github.com/ios-control/ios-deploy
+
+═══════════════════════════════════════════════════════════════
+
+This package is distributed under the terms of the respective licenses.
+See LICENSE-GPL-v2 and LICENSE-GPL-v3 for full license texts.
+
+Complete source code is available at:
+https://github.com/dbam-ai/qaptly-ios-deps
