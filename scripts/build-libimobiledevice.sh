@@ -113,7 +113,11 @@ build_component "libimobiledevice-glue" ""
 clone_or_checkout "libusbmuxd" "https://github.com/libimobiledevice/libusbmuxd.git" ""
 build_component "libusbmuxd" ""
 
-# 4. Build libimobiledevice 1.4.0
+# 4. Build libtatsu (new dependency for libimobiledevice 1.4.0)
+clone_or_checkout "libtatsu" "https://github.com/libimobiledevice/libtatsu.git" ""
+build_component "libtatsu" ""
+
+# 5. Build libimobiledevice 1.4.0
 clone_or_checkout "libimobiledevice" "https://github.com/libimobiledevice/libimobiledevice.git" "$LIBIMOBILEDEVICE_VERSION"
 build_component "libimobiledevice" "--without-cython"
 
