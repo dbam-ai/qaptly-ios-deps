@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build-and-release:
     runs-on: macos-latest
@@ -43,7 +46,7 @@ jobs:
 
           ### 📦 What's Included
 
-          - **libimobiledevice** v1.3.0 (GPL v2+)
+          - **libimobiledevice** v1.4.0 (GPL v2+)
           - **ios-deploy** v1.12.2 (GPLv3)
 
           ### 🖥️ Platform Support
