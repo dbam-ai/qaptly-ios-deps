@@ -6,12 +6,8 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build/libimobiledevice"
 SOURCES_DIR="$PROJECT_ROOT/sources"
 
-# Versions
-LIBPLIST_VERSION="2.3.0"
-LIBIMOBILEDEVICE_GLUE_VERSION="1.0.0"
-LIBUSBMUXD_VERSION="2.0.2"
-LIBIMOBILEDEVICE_VERSION="1.3.0"
-
+# Use libimobiledevice 1.4.0 release
+LIBIMOBILEDEVICE_VERSION="1.4.0"
 INSTALL_PREFIX="$BUILD_DIR"
 MACOS_MIN_VERSION="12.0"
 ARCH="arm64"
@@ -43,23 +39,31 @@ export LDFLAGS="-arch $ARCH -mmacosx-version-min=$MACOS_MIN_VERSION -L/opt/homeb
 mkdir -p "$SOURCES_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Function to download and extract source
-download_source() {
+# Function to clone or update git repo with specific tag
+clone_or_checkout() {
     local name=$1
-    local version=$2
-    local url=$3
+    local url=$2
+    local tag=$3
 
     if [ ! -d "$SOURCES_DIR/$name" ]; then
         echo ""
-        echo "Downloading $name $version..."
+        echo "Cloning $name..."
         cd "$SOURCES_DIR"
-        curl -L "$url" -o "$name.tar.gz"
-        tar xzf "$name.tar.gz"
-        mv "$name-$version" "$name"
-        rm "$name.tar.gz"
+        git clone "$url" "$name"
+        cd "$name"
+        if [ -n "$tag" ]; then
+            git checkout "$tag"
+        fi
     else
         echo ""
-        echo "$name source already exists, skipping download..."
+        echo "$name already exists, checking out $tag..."
+        cd "$SOURCES_DIR/$name"
+        git fetch
+        if [ -n "$tag" ]; then
+            git checkout "$tag"
+        else
+            git pull
+        fi
     fi
 }
 
@@ -74,11 +78,10 @@ build_component() {
 
     # Clean previous build
     make clean || true
+    make distclean || true
 
-    # Generate configure if needed
-    if [ ! -f configure ]; then
-        ./autogen.sh
-    fi
+    # Generate configure
+    ./autogen.sh
 
     # Configure
     ./configure --prefix="$INSTALL_PREFIX" \
@@ -95,35 +98,28 @@ build_component() {
     echo "$name built successfully!"
 }
 
-# 1. Build libplist
-download_source "libplist" "$LIBPLIST_VERSION" \
-    "https://github.com/libimobiledevice/libplist/releases/download/$LIBPLIST_VERSION/libplist-$LIBPLIST_VERSION.tar.bz2"
-cd "$SOURCES_DIR/libplist"
-if [ ! -f Makefile ]; then
-    build_component "libplist" "--without-cython"
-fi
+# 1. Build libplist (use latest)
+clone_or_checkout "libplist" "https://github.com/libimobiledevice/libplist.git" ""
+build_component "libplist" "--without-cython"
 
 # Update PKG_CONFIG_PATH to include our build
 export PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-# 2. Build libimobiledevice-glue
-download_source "libimobiledevice-glue" "$LIBIMOBILEDEVICE_GLUE_VERSION" \
-    "https://github.com/libimobiledevice/libimobiledevice-glue/releases/download/$LIBIMOBILEDEVICE_GLUE_VERSION/libimobiledevice-glue-$LIBIMOBILEDEVICE_GLUE_VERSION.tar.bz2"
+# 2. Build libimobiledevice-glue (use latest)
+clone_or_checkout "libimobiledevice-glue" "https://github.com/libimobiledevice/libimobiledevice-glue.git" ""
 build_component "libimobiledevice-glue" ""
 
-# 3. Build libusbmuxd
-download_source "libusbmuxd" "$LIBUSBMUXD_VERSION" \
-    "https://github.com/libimobiledevice/libusbmuxd/releases/download/$LIBUSBMUXD_VERSION/libusbmuxd-$LIBUSBMUXD_VERSION.tar.bz2"
+# 3. Build libusbmuxd (use latest)
+clone_or_checkout "libusbmuxd" "https://github.com/libimobiledevice/libusbmuxd.git" ""
 build_component "libusbmuxd" ""
 
-# 4. Build libimobiledevice
-download_source "libimobiledevice" "$LIBIMOBILEDEVICE_VERSION" \
-    "https://github.com/libimobiledevice/libimobiledevice/releases/download/$LIBIMOBILEDEVICE_VERSION/libimobiledevice-$LIBIMOBILEDEVICE_VERSION.tar.bz2"
+# 4. Build libimobiledevice 1.4.0
+clone_or_checkout "libimobiledevice" "https://github.com/libimobiledevice/libimobiledevice.git" "$LIBIMOBILEDEVICE_VERSION"
 build_component "libimobiledevice" "--without-cython"
 
 echo ""
 echo "════════════════════════════════════════════════════════"
-echo "✅ libimobiledevice built successfully!"
+echo "✅ libimobiledevice $LIBIMOBILEDEVICE_VERSION built successfully!"
 echo "════════════════════════════════════════════════════════"
 echo "Install location: $INSTALL_PREFIX"
 echo ""
