@@ -96,7 +96,7 @@ jobs:
         run: |
           gh release create v${{ steps.get_version.outputs.version }} \
             dist/qaptly-ios-deps-macos-v${{ steps.get_version.outputs.version }}.tar.gz \
-            --title "iOS Automation Dependencies v${{ steps.get_version.outputs.version }}" \
+            --title "v${{ steps.get_version.outputs.version }}" \
             --notes-file ${{ steps.release_notes.outputs.notes_file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
