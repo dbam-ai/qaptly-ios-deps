@@ -24,6 +24,18 @@ jobs:
         run: |
           bash scripts/build-all.sh
 
+      - name: Bundle OpenSSL
+        run: |
+          bash scripts/bundle_openssl.sh
+
+      - name: Fix dynamic library paths
+        run: |
+          bash scripts/fix_dylib_paths.sh
+
+      - name: Verify binaries
+        run: |
+          bash scripts/verify_binaries.sh
+
       - name: Extract version from tag
         id: get_version
         run: |
