@@ -53,6 +53,10 @@ fix_dylib() {
     install_name_tool -id "@rpath/$lib_name" "$dylib"
     echo "  Set install name: @rpath/$lib_name"
 
+    # Add @rpath to search in same directory (for dylib-to-dylib dependencies)
+    install_name_tool -add_rpath "@loader_path" "$dylib" 2>/dev/null || true
+    echo "  Added rpath: @loader_path"
+
     # Fix references to other dylibs
     otool -L "$dylib" | grep -v "$lib_name" | awk '{print $1}' | while read -r dep; do
         # Skip system libraries
