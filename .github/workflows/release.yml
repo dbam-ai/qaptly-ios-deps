@@ -14,7 +14,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        run: |
+          git clone --depth 1 --branch ${GITHUB_REF#refs/tags/} https://github.com/dbam-ai/qaptly-ios-deps.git .
+          git fetch --tags
 
       - name: Setup Homebrew dependencies
         run: |
@@ -23,6 +25,18 @@ jobs:
       - name: Build dependencies
         run: |
           bash scripts/build-all.sh
+
+      - name: Bundle OpenSSL
+        run: |
+          bash scripts/bundle_openssl.sh
+
+      - name: Fix dynamic library paths
+        run: |
+          bash scripts/fix_dylib_paths.sh
+
+      - name: Verify binaries
+        run: |
+          bash scripts/verify_binaries.sh
 
       - name: Extract version from tag
         id: get_version
@@ -79,11 +93,10 @@ jobs:
           echo "notes_file=release_notes.md" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/qaptly-ios-deps-macos-v${{ steps.get_version.outputs.version }}.tar.gz
-          body_path: ${{ steps.release_notes.outputs.notes_file }}
-          draft: false
-          prerelease: false
+        run: |
+          gh release create v${{ steps.get_version.outputs.version }} \
+            dist/qaptly-ios-deps-macos-v${{ steps.get_version.outputs.version }}.tar.gz \
+            --title "iOS Automation Dependencies v${{ steps.get_version.outputs.version }}" \
+            --notes-file ${{ steps.release_notes.outputs.notes_file }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
